@@ -1,29 +1,16 @@
-# Backend: WebSocket Client & API Server
+````md
+# Backend
 
-This backend module is responsible for all server communication, WebSocket connection management, and API endpoints. It handles sending messages, tracking responses, and verifying counter integrity.
+This backend handles the WebSocket connection and API endpoints used by the frontend.
 
-## Overview
-
-The backend is built with Node.js and Express, providing both a WebSocket client for real-time communication and a REST API for monitoring and control.
-
-### Key Responsibilities
-
-- **WebSocket Communication**: Maintains a persistent connection to the Nura WebSocket server
-- **Message Transmission**: Sends exactly 30 messages and tracks responses
-- **Real-time Logging**: Outputs detailed logs of server interactions
-- **API Endpoints**: Provides REST endpoints for frontend integration
-- **Counter Verification**: Validates that received message counters are monotonically increasing
-- **Connection Management**: Handles reconnection attempts and error recovery
-
-## Installation
-
-Install all required dependencies:
+## Run
 
 ```bash
 npm install
 ```
 
 Create `.env` file and add your token.
+you can refer `.env.example`
 
 ## Running the Server
 
@@ -31,64 +18,90 @@ Start the backend server:
 
 ```bash
 npm start
+````
+
+Backend runs on:
+
+```txt
+http://localhost:5000
 ```
 
-The server will start on `http://localhost:5000` and automatically:
+## Initial Logs
 
-1. **Health Check**: Verifies the Nura server is reachable
-2. **Counter Reset**: Resets the server counter to 0
-3. **WebSocket Connection**: Establishes a secure connection to the WebSocket endpoint
-4. **Message Transmission**: Sends 30 messages with a 100ms delay between each
-5. **Response Logging**: Outputs each received message with its counter value
-6. **Result Verification**: Confirms counters are in monotonically increasing order
+When the server starts:
 
-## Server Interaction Logs
-
-When you run the server, you'll see detailed logs showing the server interaction flow:
-
-```
+```txt
 Server running on http://localhost:5000
+Server reachable
 Connecting to WS...
-✅ WS connected
-Connected to Nura WebSocket server
+WS connected
+```
 
-📩 { counter: 1, timestamp: '2026-05-17T10:30:45Z', ... }
-📩 { counter: 2, timestamp: '2026-05-17T10:30:45Z', ... }
-📩 { counter: 3, timestamp: '2026-05-17T10:30:46Z', ... }
-...
-📩 { counter: 30, timestamp: '2026-05-17T10:31:02Z', ... }
+## Sending Messages
 
-✅ All 30 messages received
-✅ Counters are in monotonically increasing order: [1, 2, 3, ..., 30]
+Whenever messages are triggered from the frontend, logs look like this:
+
+```txt
+Sent 1
+Sent 2
+Sent 3
+Sent 4
+
+WS closed
+WS disconnected during sending
+
+Connecting to WS...
+WS connected
+
+Sent 1
+Sent 2
+Sent 3
+
+📩 { echo_message: 'ping 1', counter: 11, ts: 1779082098914 }
+
+Sent 4
+Sent 5
+
+📩 { echo_message: 'ping 3', counter: 13, ts: 1779082099120 }
+
+Sent 6
+
+WS closed
+WS disconnected during sending
+
+Connecting to WS...
+WS connected
+
+Sent 1
+Sent 2
+Sent 3
+
+WS closed
+WS disconnected during sending
+
+Connecting to WS...
 ```
 
 ## API Endpoints
-
-The backend provides the following REST API endpoints:
 
 ### GET /health
 Check server health status
 
 ### GET /messages
-Retrieve all received messages and counter verification status
 
-**Response:**
-```json
-{
-  "messages": [
-    { "counter": 1, "timestamp": "...", ... },
-    { "counter": 2, "timestamp": "...", ... }
-  ],
-  "isMonotonic": true,
-  "total": 30
-}
-```
-
-### POST /send
-Trigger message transmission (count: 30 by default)
-
-### POST /reset
-Reset the server counter and clear message history
+Returns all received messages.
 
 ### GET /status
-Get current connection and operation status
+
+Returns current websocket connection state.
+
+### POST /send
+
+Starts sending messages.
+
+### POST /reset
+
+Clears message history and resets state.
+
+```
+```
