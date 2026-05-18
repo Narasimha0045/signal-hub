@@ -13,13 +13,11 @@ function App() {
   const pollingRef = useRef(null);
   const tableRef   = useRef(null);
 
-  // ── Toast ──────────────────────────────────
   function showToast(type, text) {
     setToast({ type, text });
     setTimeout(() => setToast(null), 3000);
   }
 
-  // ── Status ─────────────────────────────────
   async function checkStatus() {
     try {
       const res  = await fetch(`${API_URL}/status`);
@@ -30,7 +28,6 @@ function App() {
     }
   }
 
-  // ── Fetch messages ──────────────────────────
   async function fetchMessages(silent = false) {
     try {
       if (!silent) setLoading(true);
@@ -46,21 +43,18 @@ function App() {
     }
   }
 
-  // ── Auto-scroll ─────────────────────────────
   useEffect(() => {
     if (tableRef.current) {
       tableRef.current.scrollTop = tableRef.current.scrollHeight;
     }
   }, [messages.length]);
 
-  // ── Poll status ─────────────────────────────
   useEffect(() => {
     checkStatus();
     const id = setInterval(checkStatus, POLL_INTERVAL_MS);
     return () => clearInterval(id);
   }, []);
 
-  //  Poll messages
   function startPolling() {
     if (pollingRef.current) return;
     pollingRef.current = setInterval(() => fetchMessages(true), POLL_INTERVAL_MS);
@@ -73,7 +67,6 @@ function App() {
     }
   }
 
-  // Send
   async function handleSend() {
     try {
       setLoading(true);
@@ -97,7 +90,6 @@ function App() {
     }
   }
 
-  // Reset
   async function handleReset() {
     try {
       stopPolling();
@@ -122,8 +114,6 @@ function App() {
 
   return (
     <div className="App">
-
-      {/* ── Header ── */}
       <header className="App-header">
         <h1>
           <span className="icon">⚡</span>
@@ -140,14 +130,12 @@ function App() {
         <span className="count-badge">{messages.length} MSG</span>
       </div>
 
-      {/* ── Toast ── */}
       {toast && (
         <div className={`toast ${toast.type}`}>
           {toast.type === 'success' ? '✓' : '✕'} {toast.text}
         </div>
       )}
 
-      {/* ── Controls ── */}
       <div className="controls">
         <button onClick={handleReset} disabled={loading || !wsConnected}>
           Reset Node
@@ -157,7 +145,6 @@ function App() {
         </button>
       </div>
 
-      {/* ── Content ── */}
       {messages.length > 0 && (
         <div className="content">
 
@@ -203,10 +190,8 @@ function App() {
         </div>
       )}
 
-      {/* ── Empty State ── */}
       {messages.length === 0 && !loading && (
         <div className="empty-state">
-          {/* <span className="empty-icon">📡</span> */}
           <span>Click on ⚡ Send 30 messages</span>
         </div>
       )}
