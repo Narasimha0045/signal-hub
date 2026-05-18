@@ -110,7 +110,15 @@ function App() {
   }
 
   const wsConnected = status?.wsConnected ?? false;
-  const barState = status?.isSending ? 'sending' : wsConnected ? 'connected' : 'disconnected';
+  const isRetrying = !wsConnected && (status?.reconnectAttempts ?? 0) > 0;
+  const barState =
+  status?.isSending
+    ? 'sending'
+    : isRetrying
+    ? 'reconnecting'
+    : wsConnected
+    ? 'connected'
+    : 'disconnected';
 
   return (
     <div className="App">
@@ -123,11 +131,41 @@ function App() {
       </header>
       
       <div className={`status-bar ${barState}`}>
-        <span className={`dot ${status?.isSending ? 'yellow' : wsConnected ? 'green' : 'red'}`} />
+        <span
+          className={`dot ${
+            status?.isSending
+              ? 'yellow'
+              : isRetrying
+              ? 'orange'
+              : wsConnected
+              ? 'green'
+              : 'red'
+          }`}
+        />
+
         <span className="status-value">
-          {status?.isSending ? 'Sending' : wsConnected ? 'Online' : 'Offline'}
+          {status?.isSending
+            ? 'Sending'
+            : isRetrying
+            ? 'Reconnecting'
+            : wsConnected
+            ? 'Online'
+            : 'Offline'}
         </span>
-        <span className="count-badge">{messages.length} MSG</span>
+
+        {isRetrying && (
+          <>
+            <span className="status-divider" />
+            <span className="retry-tag">
+              ↻ retry #{status?.reconnectAttempts}
+            </span>
+          </>
+        )}
+
+        <span className="count-badge">
+          {messages.length} MSG
+        </span>
+
       </div>
 
       {toast && (
