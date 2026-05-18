@@ -7,22 +7,22 @@ Simple React dashboard for viewing websocket messages, connection status, and li
 ```bash
 npm install
 npm start
-````
+```
 
 Frontend runs on:
 
-```txt
+```
 http://localhost:3000
 ```
 
 ## Features
 
-* Live websocket connection status
-* Send messages from UI
-* View received messages in real time
-* Auto reconnect handling
-* Counter order verification
-* Reset messages
+- Live websocket connection status
+- Send messages from UI
+- View received messages in real time
+- Auto reconnect handling
+- Counter order verification
+- Reset messages
 
 ## Usage
 
@@ -33,9 +33,6 @@ http://localhost:3000
 
 ## Status Indicators
 
-* 🟢 Online
-* 🟡 Sending
-* 🔴 Offline
-
-```
-```
+- 🟢 Online
+- 🟡 Sending
+- 🔴 Offline

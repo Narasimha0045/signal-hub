@@ -1,4 +1,3 @@
-````md
 # Backend
 
 This backend handles the WebSocket connection and API endpoints used by the frontend.
@@ -10,7 +9,7 @@ npm install
 ```
 
 Create `.env` file and add your token.
-you can refer `.env.example`
+You can refer `.env.example`
 
 ## Running the Server
 
@@ -18,11 +17,11 @@ Start the backend server:
 
 ```bash
 npm start
-````
+```
 
 Backend runs on:
 
-```txt
+```
 http://localhost:5000
 ```
 
@@ -30,7 +29,7 @@ http://localhost:5000
 
 When the server starts:
 
-```txt
+```
 Server running on http://localhost:5000
 Server reachable
 Connecting to WS...
@@ -41,7 +40,7 @@ WS connected
 
 Whenever messages are triggered from the frontend, logs look like this:
 
-```txt
+```
 Sent 1
 Sent 2
 Sent 3
@@ -85,23 +84,16 @@ Connecting to WS...
 ## API Endpoints
 
 ### GET /health
-Check server health status
+Check server health status.
 
 ### GET /messages
-
 Returns all received messages.
 
 ### GET /status
-
 Returns current websocket connection state.
 
 ### POST /send
-
 Starts sending messages.
 
 ### POST /reset
-
 Clears message history and resets state.
-
-```
-```
