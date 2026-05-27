@@ -178,6 +178,17 @@ body::before {
   white-space: nowrap;
 }
 
+.queue-tag {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 500;
+  background: #1e3a3a;
+  color: #6dd9d9;
+  border: 1px solid #2d5a5a;
+  white-space: nowrap;
+}
+
 .dot {
   width: 9px;
   height: 9px;

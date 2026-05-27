@@ -1,6 +1,6 @@
 const express = require('express');
 
-module.exports = function ({ api, headers, wsRef, state }) {
+module.exports = function ({ api, headers, wsRef, state, processMessageQueue, resetTotalSent }) {
   const router = express.Router();
 
   // health check
@@ -39,49 +39,68 @@ module.exports = function ({ api, headers, wsRef, state }) {
     try {
       await api.post('/reset', {}, { headers });
       state.receivedMessages = [];
+      resetTotalSent();
       res.json({ status: 'reset' });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }
   });
 
-  // send (FIXED)
+  // send
   router.post('/send', async (req, res) => {
     if (state.isSending) {
       return res.status(400).json({ error: 'Already sending' });
     }
 
     const ws = wsRef();
-    if (!ws || ws.readyState !== 1) {
-      return res.status(500).json({ error: 'WS not connected' });
-    }
-
-    const { count = 10 } = req.body;
+    const { count = 30 } = req.body;
     state.isSending = true;
+    resetTotalSent();
+    let sentCount = 0;
+    let queuedCount = 0;
 
     try {
       for (let i = 1; i <= count; i++) {
-        try {
-          if (!ws || ws.readyState !== 1) {
-            console.log('WS disconnected during sending');
-            break;
-          }
+        const message = `ping ${i}`;
 
-          ws.send(`ping ${i}`);
-          console.log(`Sent ${i}`);
-        } catch (err) {
-          console.log('Send error:', err.message);
-          break;
+        if (ws && ws.readyState === 1) {
+          try {
+            ws.send(message);
+            console.log(`Sent immediately: ${i}`);
+            sentCount++;
+            state.totalSentThisRound++;
+          } catch (err) {
+            console.log(`Failed to send ${i}, queueing:`, err.message);
+            state.messageQueue.push(message);
+            queuedCount++;
+          }
+        } else {
+          console.log(`WS not connected, queueing: ${i}`);
+          state.messageQueue.push(message);
+          queuedCount++;
         }
 
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 50));
+      }
+      if (ws && ws.readyState === 1 && state.messageQueue.length > 0) {
+        await processMessageQueue();
       }
 
-      res.json({ status: 'done', count });
+      res.json({
+        status: 'queued',
+        count,
+        sent: sentCount,
+        queued: queuedCount,
+        totalSentThisRound: state.totalSentThisRound,
+        lastQueueComplete: state.lastQueueComplete,
+        message: queuedCount > 0 
+          ? `${sentCount} sent immediately, ${queuedCount} queued (will send on reconnect)`
+          : `All ${sentCount} messages sent successfully`,
+      });
     } catch (err) {
       res.status(500).json({ error: err.message });
     } finally {
-      state.isSending = false; // FIXED (moved to finally)
+      state.isSending = false;
     }
   });
 
@@ -94,6 +113,10 @@ module.exports = function ({ api, headers, wsRef, state }) {
       messages: state.receivedMessages.length,
       reconnectAttempts: state.reconnectAttempts,
       isSending: state.isSending,
+      queuedMessages: state.messageQueue.length,
+      isProcessingQueue: state.isProcessingQueue,
+      totalSentThisRound: state.totalSentThisRound,
+      lastQueueComplete: state.lastQueueComplete,
     });
   });
 

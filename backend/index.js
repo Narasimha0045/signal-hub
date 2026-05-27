@@ -39,9 +39,51 @@ const state = {
   isSending: false,
   receivedMessages: [],
   reconnectAttempts: 0,
+  messageQueue: [], 
+  isProcessingQueue: false,
+  lastQueueComplete: 0, 
+  totalSentThisRound: 0, 
 };
 
 let ws = null;
+
+// Process message queue when WS is connected
+async function processMessageQueue() {
+  if (state.isProcessingQueue || state.messageQueue.length === 0) return;
+  if (!ws || ws.readyState !== 1) return;
+
+  state.isProcessingQueue = true;
+  const queueLength = state.messageQueue.length;
+  console.log(`Processing queue: ${queueLength} messages`);
+
+  try {
+    while (state.messageQueue.length > 0) {
+      if (!ws || ws.readyState !== 1) {
+        console.log('WS disconnected while processing queue');
+        break;
+      }
+
+      const message = state.messageQueue.shift();
+      try {
+        ws.send(message);
+        console.log(`Queue sent: ${message}`);
+        state.totalSentThisRound++;
+        await new Promise(r => setTimeout(r, 100));
+      } catch (err) {
+        console.log('Queue send error:', err.message);
+        state.messageQueue.unshift(message);
+        break;
+      }
+    }
+    
+    if (state.messageQueue.length === 0) {
+      state.lastQueueComplete = Date.now();
+      console.log(`✓ Queue processing complete! Total sent this round: ${state.totalSentThisRound}`);
+    }
+  } finally {
+    state.isProcessingQueue = false;
+  }
+}
 
 // websocket
 function connect() {
@@ -54,6 +96,7 @@ function connect() {
   ws.on('open', () => {
     console.log('WS connected');
     state.reconnectAttempts = 0;
+    setTimeout(processMessageQueue, 500);
   });
 
   ws.on('message', (data) => {
@@ -83,6 +126,8 @@ const routes = require('./routes/api')({
   headers,
   wsRef: () => ws,
   state,
+  processMessageQueue,
+  resetTotalSent: () => { state.totalSentThisRound = 0; state.lastQueueComplete = 0; },
 });
 
 app.use('/', routes);
